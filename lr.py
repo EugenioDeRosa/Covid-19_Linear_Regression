@@ -7,8 +7,8 @@ from matplotlib.ticker import MaxNLocator
 
 
 # Create directories for saving the graphs and period datasets
-os.makedirs('grafici', exist_ok=True)
-os.makedirs('dataset_periodi', exist_ok=True)
+os.makedirs('graphs', exist_ok=True)
+os.makedirs('dataset_periods', exist_ok=True)
 
 # Load the dataset
 output_file = 'dataset_weekly_covid_19_italy.csv'
@@ -107,7 +107,7 @@ plt.xlim(0, x_starts[-1])
 # Margins for better visualization
 plt.margins(x=0.05, y=0.1)
 
-plt.savefig(os.path.join('grafici', 'overall_graph_highlighted_max_min.png'))
+plt.savefig(os.path.join('graphs', 'overall_graph_highlighted_max_min.png'))
 plt.show()
 
 
@@ -125,7 +125,7 @@ with open('regression_results.txt', 'w') as results_file:
             continue
 
         # Save the dataset for the period
-        period_data.to_csv(os.path.join('dataset_periodi', f'dataset_{period_name}_{start_date}_to_{end_date}.csv'), index=False)
+        period_data.to_csv(os.path.join('dataset_periods', f'dataset_{period_name}_{start_date}_to_{end_date}.csv'), index=False)
 
         # Calculate the relative week number for the period
         period_start = pd.to_datetime(start_date)
@@ -165,7 +165,7 @@ with open('regression_results.txt', 'w') as results_file:
         plt.margins(x=0.05, y=0.1)
 
         # Save the graph
-        plt.savefig(os.path.join('grafici', f'graph_{period_name}_{start_date}_to_{end_date}.png'))
+        plt.savefig(os.path.join('graphs', f'graph_{period_name}_{start_date}_to_{end_date}.png'))
         plt.close()
 
         # Print the results
