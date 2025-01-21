@@ -22,6 +22,7 @@ min_week = data['week_number'].min()
 data['week_number'] = data['week_number'] - min_week
 
 # Chosen Periods
+
 periods = [
     ('2021-09-23', '2022-01-28', 'Winter 2021'),
     ('2022-02-04', '2022-06-10', 'Intermediate 2022'),
