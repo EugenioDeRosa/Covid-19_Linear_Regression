@@ -12,7 +12,7 @@ os.makedirs('dataset_periods', exist_ok=True)
 
 # Load the dataset
 output_file = 'dataset_weekly_covid_19_italy.csv'
-data = pd.read_csv(output_file, parse_dates=['start_of_week', 'data'])
+data = pd.read_csv(output_file, parse_dates=['start_of_week', 'data_end_week'])
 
 # Define start reference date
 start_reference = pd.to_datetime('2021-09-23')  # Data di inizio corretta
