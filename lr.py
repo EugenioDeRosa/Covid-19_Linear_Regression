@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 
-
 # Create directories for saving the graphs and period datasets
 os.makedirs('graphs', exist_ok=True)
 os.makedirs('dataset_periods', exist_ok=True)
@@ -23,11 +22,12 @@ min_week = data['week_number'].min()
 data['week_number'] = data['week_number'] - min_week
 
 # Chosen Periods
+
 periods = [
     ('2021-09-23', '2022-01-28', 'Winter 2021'),
     ('2022-02-04', '2022-06-10', 'Intermediate 2022'),
-    ('2022-06-17', '2022-08-19', 'Summer 2022'),
-    ('2022-08-26', '2022-12-23', 'Winter 2022'),
+    ('2022-06-17', '2022-09-02', 'Summer 2022'),
+    ('2022-09-09', '2022-12-23', 'Winter 2022'),
     ('2022-12-30', '2023-06-30', 'Intermediate 2023'),
     ('2023-07-07', '2023-09-07', 'Summer 2023'),
     ('2023-09-14', '2023-12-28', 'Winter 2023'),
@@ -51,20 +51,12 @@ def apply_regression(X, Y):
 # Graphs colors
 colors = ['#1f77b4', '#808080', '#d62728', '#1f78b4', '#8C9E8E', '#ff7f0e', '#08306b', '#8C8279', '#8c564b', '#9467bd']
 
-# Create the overall graph with highlighted maxima and minima weeks
+# Create the overall graph without highlighted points but with background colors
 plt.figure(figsize=(14, 10))
 
-ax = plt.gca() # Get the current axes
+ax = plt.gca()  # Get the current axes
 
-# Find the minimum week number
-min_week_overall = data['week_number'].min()
-
-# List to store the initial x values
 x_starts = []
-
-# Set di settimane di massimo e minimo
-graph_max_weeks = {18, 43, 64, 107, 116, 154}
-graph_min_weeks = {38, 52, 95, 138}
 
 # Plot the data for each period
 for i, (start_date, end_date, period_name) in enumerate(periods):
@@ -73,43 +65,74 @@ for i, (start_date, end_date, period_name) in enumerate(periods):
     if period_data.empty:
         continue
 
-    X = period_data['week_number'] - min_week_overall
+    X = period_data['week_number']
     Y = period_data['deceduti_diff']
 
     x_starts.append(X.min())
-
     plt.scatter(X, Y, color=colors[i], alpha=0.6, s=10, label=f'Data {period_name}')
 
-    # Highlight the maximum weeks in red
-    for x_val, y_val in zip(X, Y):
-        if x_val in graph_max_weeks:
-            plt.scatter(x_val, y_val, color='red', s=50, edgecolor='black', linewidth=1.5, zorder=5)
-
-    # Highlight the minimum weeks in yellow
-    for x_val, y_val in zip(X, Y):
-        if x_val in graph_min_weeks:
-            plt.scatter(x_val, y_val, color='yellow', s=50, edgecolor='black', linewidth=1.5, zorder=5)
-
-x_starts.append(data['week_number'].max() - min_week_overall)
+x_starts.append(data['week_number'].max())
 
 for i in range(len(x_starts) - 1):
     ax.axvspan(x_starts[i], x_starts[i + 1], color=colors[i], alpha=0.1)
 
 plt.xlabel('Weeks Since First Measurement')
 plt.ylabel('Weekly Deaths')
-plt.title('Overall Graph with Highlighted Max and Min Weeks')
+plt.title('Overall Graph')
 plt.legend()
 plt.grid(True)
 
 ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-plt.xlim(0, x_starts[-1])
+plt.xlim(0, data['week_number'].max())
 
 # Margins for better visualization
 plt.margins(x=0.05, y=0.1)
 
-plt.savefig(os.path.join('graphs', 'overall_graph_highlighted_max_min.png'))
+# Save the graph without regression lines
+plt.savefig(os.path.join('graphs', 'overall_graph_without_regression.png'))
 plt.show()
 
+# Add regression lines to the overall graph
+plt.figure(figsize=(14, 10))
+
+ax = plt.gca()  # Get the current axes
+
+for i, (start_date, end_date, period_name) in enumerate(periods):
+    period_data = filter_period(data, start_date, end_date)
+
+    if period_data.empty:
+        continue
+
+    X = period_data['week_number']
+    Y = period_data['deceduti_diff']
+
+    plt.scatter(X, Y, color=colors[i], alpha=0.6, s=10, label=f'Data {period_name}')
+
+    # Apply regression and plot the line
+    model = apply_regression(X, Y)
+    X_vals = np.linspace(X.min(), X.max(), 100)
+    Y_vals = model.predict(sm.add_constant(X_vals))
+    plt.plot(X_vals, Y_vals, color=colors[i], linestyle='-', linewidth=2)
+
+# Add background spans for periods
+for i in range(len(x_starts) - 1):
+    ax.axvspan(x_starts[i], x_starts[i + 1], color=colors[i], alpha=0.1)
+
+plt.xlabel('Weeks Since First Measurement')
+plt.ylabel('Weekly Deaths')
+plt.title('Overall Graph with Regression Lines')
+plt.legend()
+plt.grid(True)
+
+ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+plt.xlim(0, data['week_number'].max())
+
+# Margins for better visualization
+plt.margins(x=0.05, y=0.1)
+
+# Save the graph with regression lines
+plt.savefig(os.path.join('graphs', 'overall_graph_with_regression.png'))
+plt.show()
 
 # Create the regression results file
 with open('regression_results.txt', 'w') as results_file:
@@ -138,7 +161,6 @@ with open('regression_results.txt', 'w') as results_file:
         X_cumulative = X_relative + cumulative_week_start  # Utilizza il numero cumulativo per il grafico
         Y = period_data['deceduti_diff']
         model = apply_regression(X_relative, Y)
-
 
         X_vals_week_number = np.arange(X_relative.min(), X_relative.max() + 1)
         X_vals = pd.DataFrame({'const': 1, 'week_number': X_vals_week_number})
