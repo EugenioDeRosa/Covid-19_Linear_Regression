@@ -1,4 +1,4 @@
-start_of_week,deceduti_diff,data,year,week_number
+start_of_week,deceduti_diff,data_end_week,year,week_number
 2022-09-09 17:00:00,366.0,2022-09-15 17:00:00,2022,50
 2022-09-16 17:00:00,311.0,2022-09-22 17:00:00,2022,51
 2022-09-23 17:00:00,279.0,2022-09-29 17:00:00,2022,52

@@ -1,4 +1,4 @@
-start_of_week,deceduti_diff,data,year,week_number
+start_of_week,deceduti_diff,data_end_week,year,week_number
 2022-06-17 17:00:00,350.0,2022-06-23 17:00:00,2022,38
 2022-06-24 17:00:00,386.0,2022-06-30 17:00:00,2022,39
 2022-07-01 17:00:00,511.0,2022-07-07 17:00:00,2022,40
