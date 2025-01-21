@@ -10,17 +10,18 @@ This project analyzes COVID-19 data in Italy using linear regression. It include
 
 To run this project, ensure you have the following installed:
 
-Python 3.7+
+Python 3.9+
 
 Required Python libraries (install via pip):
 
 pandas
 
-numpy
+statsmodels
 
 matplotlib
 
-scikit-learn
+numpy
+
 
 # Setup
 
