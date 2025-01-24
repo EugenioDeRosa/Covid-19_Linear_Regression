@@ -22,18 +22,17 @@ min_week = data['week_number'].min()
 data['week_number'] = data['week_number'] - min_week
 
 # Chosen Periods
-
 periods = [
     ('2021-09-23', '2022-01-28', 'Winter 2021'),
     ('2022-02-04', '2022-06-10', 'Intermediate 2022'),
-    ('2022-06-17', '2022-09-02', 'Summer 2022'),
-    ('2022-09-09', '2022-12-23', 'Winter 2022'),
+    ('2022-06-17', '2022-08-19', 'Summer 2022'),
+    ('2022-08-26', '2022-12-23', 'Winter 2022'),
     ('2022-12-30', '2023-06-30', 'Intermediate 2023'),
     ('2023-07-07', '2023-09-07', 'Summer 2023'),
     ('2023-09-14', '2023-12-28', 'Winter 2023'),
     ('2024-01-04', '2024-05-23', 'Intermediate 2024'),
-    ('2024-05-30', '2024-09-19', 'Summer 2024'),
-    ('2024-09-26', '2024-10-31', 'Winter 2024')]
+    ('2024-05-30', '2024-09-19', 'Summer 2024')
+]
 
 # Function to filter the data based on the period
 def filter_period(data, start_date, end_date):
@@ -64,6 +63,8 @@ for i, (start_date, end_date, period_name) in enumerate(periods):
 
     if period_data.empty:
         continue
+
+    period_data.to_csv(os.path.join('dataset_periods', f'dataset_{period_name}.csv'), index=False)
 
     X = period_data['week_number']
     Y = period_data['deceduti_diff']
@@ -137,28 +138,33 @@ plt.show()
 # Create the regression results file
 with open('regression_results.txt', 'w') as results_file:
     results_file.write('Period, Slope, Intercept, R^2, P-value, Mean, Std Dev, Variance\n')
-
     cumulative_week_start = 0
     # Loop through each period
     for i, (start_date, end_date, period_name) in enumerate(periods):
         period_data = filter_period(data, start_date, end_date)
 
         if period_data.empty:
-            print(f"No data found for the period {start_date} - {end_date}")
             continue
 
-        # Save the dataset for the period
-        period_data.to_csv(os.path.join('dataset_periods', f'dataset_{period_name}_{start_date}_to_{end_date}.csv'), index=False)
-
-        # Calculate the relative week number for the period
+        # Calculate the relative week number
         period_start = pd.to_datetime(start_date)
         period_data.loc[:, 'relative_week_number'] = ((period_data['start_of_week'] - period_start).dt.days // 7).astype(int)
+
+        # Check if there are duplicate weeks and increment the week number if so
+        seen_weeks = set()
+        for idx, week in period_data['relative_week_number'].items():
+            if week in seen_weeks:
+                # Increment the week number if it has been seen before
+                period_data.at[idx, 'relative_week_number'] += 1
+            seen_weeks.add(period_data.at[idx, 'relative_week_number'])
+
+        # Update the minimum week number
         min_week = period_data['relative_week_number'].min()
         period_data.loc[:, 'relative_week_number'] = period_data['relative_week_number'] - min_week
 
         # Apply linear regression
-        X_relative = period_data['relative_week_number']  # Utilizza il numero di settimane relativo al periodo per la regressione
-        X_cumulative = X_relative + cumulative_week_start  # Utilizza il numero cumulativo per il grafico
+        X_relative = period_data['relative_week_number']  # Use relative number for the model
+        X_cumulative = X_relative + cumulative_week_start  # Use cumulative number for plotting
         Y = period_data['deceduti_diff']
         model = apply_regression(X_relative, Y)
 
@@ -210,3 +216,21 @@ with open('regression_results.txt', 'w') as results_file:
 
         # Update the cumulative week start
         cumulative_week_start += X_relative.max() + 1
+
+ # Read file and calculate the mean of R^2 for each season
+results_file = 'regression_results.txt'
+results_df = pd.read_csv(results_file, delimiter=',')
+
+# Remove spaces
+results_df.columns = results_df.columns.str.strip()
+
+# Extract the season from the period name and calculate the mean of R^2 for each season
+results_df['Season'] = results_df['Period'].str.split(' ').str[0]  # Estrai la prima parola (stagione)
+seasonal_r2_mean = results_df.groupby('Season')['R^2'].mean().reset_index()
+
+# Save the results to a CSV file
+seasonal_r2_mean.to_csv('seasonal_r2_means.csv', index=False)
+
+# Print the results
+print("\n--- R^2 mean for every season---")
+print(seasonal_r2_mean)
